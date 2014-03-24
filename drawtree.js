@@ -69,7 +69,7 @@
       }
       ctx.strokeStyle = '#000';
       this.rectX = coords.x + (this.dimensions.width - ctx.measureText(this.value).width) / 2;
-      this.rectY = coords.y - fontSize;
+      this.rectY = coords.y - fontSize / 2;
       top = coords.y + fontSize + lineHeight;
       runningLeft = coords.x;
       _ref = this.children;

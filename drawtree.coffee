@@ -38,7 +38,7 @@ exports.Tree = class Tree
     ctx.strokeStyle = '#000'
 
     @rectX = coords.x + (@dimensions.width - ctx.measureText(@value).width) / 2
-    @rectY = coords.y - fontSize
+    @rectY = coords.y - fontSize / 2
     
     top = coords.y + fontSize + lineHeight
     runningLeft = coords.x
