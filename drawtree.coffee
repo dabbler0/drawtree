@@ -66,25 +66,62 @@ exports.Tree = class Tree
         ctx.stroke()
 
       runningLeft += child.dimensions.width
-  
-  drawText: (ctx, fontSize = 20, lineHeight = 20) ->
+
+  drawBoxPath: (ctx, fontSize = 20, lineHeight = 20, coords = {x:20, y:20}) ->
+    ctx.strokeStyle = '#000'
+
+    @rectX = coords.x + (@dimensions.width - ctx.measureText(@value).width) / 2
+    @rectY = coords.y
+    
+    top = coords.y + fontSize + lineHeight
+    runningLeft = coords.x
+
+    if @centerChildren
+      runningLeft += (@dimensions.width - @childrenWidth) / 2
+
+    for child in @children
+      child.drawBoxPath ctx, fontSize, lineHeight, {
+        x: runningLeft,
+        y: top
+      }
+
+      runningLeft += child.dimensions.width
+      
     unless @parent is null
-      ctx.fillStyle = '#FFF'
+      ctx.strokeStyle = '#000'
+      console.log 'stroking rect', @value
+
+      ctx.strokeRect coords.x, coords.y, @dimensions.width, @dimensions.height #fontSize + lineHeight
+  
+  drawText: (ctx, fontSize = 20, lineHeight = 20, style = {border: '#000', background: '#FFF'}) ->
+    unless @parent is null
+      ctx.strokeStyle = style.border
+      ctx.fillStyle = style.background
       ctx.strokeRect @rectX, @rectY, ctx.measureText(@value).width, fontSize
       ctx.fillRect @rectX, @rectY, ctx.measureText(@value).width, fontSize
-      ctx.fillStyle = '#000'
+      ctx.fillStyle = style.color ? '#000'
       
-      ctx.font = "#{fontSize}px Arial"
+      ctx.font = "#{fontSize}px #{style.font ? 'Arial'}"
       ctx.fillText @value, @rectX, @rectY + fontSize
 
-    for child in @children then child.drawText ctx, fontSize, lineHeight
+    for child in @children then child.drawText ctx, fontSize, lineHeight, style
 
-  draw: (ctx, fontSize = 20, lineHeight = 20, coords = {x:20, y:20}) ->
+  drawTree: (ctx, fontSize = 20, lineHeight = 20, coords = {x:20, y:20}) ->
     @computeDimensions ctx, fontSize, lineHeight
     @drawTreePath ctx, fontSize, lineHeight, coords
     @drawText ctx, fontSize, lineHeight
 
-exports.parse = parse = (string) ->
+  drawBox: (ctx, fontSize = 20, lineHeight = 20, coords = {x:20, y:20}) ->
+    @computeDimensions ctx, fontSize, lineHeight
+    @drawBoxPath ctx, fontSize, lineHeight, coords
+    @drawText ctx, fontSize, lineHeight, {
+      border: 'transparent',
+      background: 'transparent'
+    }
+
+  draw: -> @drawTree.apply this, arguments
+
+exports.parseTabdown = (string) ->
   lines = string.split '\n'
   tree = new Tree null, 'root', -1
   for line in lines
@@ -102,5 +139,47 @@ exports.parse = parse = (string) ->
     tree = tree.parent
 
   return tree
+
+exports.parseLisp = (string) ->
+  tree = new Tree null, 'root', 0
+  editingHead = false
+  for char in string
+    switch char
+      when '('
+        editingHead = true
+        tree = new Tree tree, '', tree.depth + 1
+      when ')'
+        while tree.value.length is 0
+          tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
+          tree = tree.parent
+        tree = tree.parent
+      when ' ', '\n'
+        unless editingHead
+          if tree.value.length is 0
+            tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
+          tree = tree.parent
+        editingHead = false
+        tree = new Tree tree, '', tree.depth + 1
+      else
+        tree.value += char
+
+  until tree.parent is null
+    if tree.value.length is 0
+      tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
+    tree = tree.parent
+
+  return tree
+
+parseCoffee = (node) ->
+  root = new Tree null, node.constructor.name
+  node.eachChild (child) ->
+    newNode = parseCoffee child
+    newNode.parent = root
+    root.children.push newNode
+
+  return root
+
+exports.parseCoffee = (text) ->
+  parseCoffee CoffeeScript.nodes text
 
 window.tabdown = exports

@@ -9,7 +9,8 @@
 
 
 (function() {
-  var PADDING, Tree, exports, parse;
+  var PADDING, Tree, exports, parseCoffee,
+    __slice = [].slice;
 
   PADDING = 10;
 
@@ -101,32 +102,77 @@
       return _results;
     };
 
-    Tree.prototype.drawText = function(ctx, fontSize, lineHeight) {
-      var child, _i, _len, _ref, _results;
+    Tree.prototype.drawBoxPath = function(ctx, fontSize, lineHeight, coords) {
+      var child, runningLeft, top, _i, _len, _ref;
       if (fontSize == null) {
         fontSize = 20;
       }
       if (lineHeight == null) {
         lineHeight = 20;
       }
-      if (this.parent !== null) {
-        ctx.fillStyle = '#FFF';
-        ctx.strokeRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
-        ctx.fillRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
-        ctx.fillStyle = '#000';
-        ctx.font = "" + fontSize + "px Arial";
-        ctx.fillText(this.value, this.rectX, this.rectY + fontSize);
+      if (coords == null) {
+        coords = {
+          x: 20,
+          y: 20
+        };
+      }
+      ctx.strokeStyle = '#000';
+      this.rectX = coords.x + (this.dimensions.width - ctx.measureText(this.value).width) / 2;
+      this.rectY = coords.y;
+      top = coords.y + fontSize + lineHeight;
+      runningLeft = coords.x;
+      if (this.centerChildren) {
+        runningLeft += (this.dimensions.width - this.childrenWidth) / 2;
       }
       _ref = this.children;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         child = _ref[_i];
-        _results.push(child.drawText(ctx, fontSize, lineHeight));
+        child.drawBoxPath(ctx, fontSize, lineHeight, {
+          x: runningLeft,
+          y: top
+        });
+        runningLeft += child.dimensions.width;
+      }
+      if (this.parent !== null) {
+        ctx.strokeStyle = '#000';
+        console.log('stroking rect', this.value);
+        return ctx.strokeRect(coords.x, coords.y, this.dimensions.width, this.dimensions.height);
+      }
+    };
+
+    Tree.prototype.drawText = function(ctx, fontSize, lineHeight, style) {
+      var child, _i, _len, _ref, _ref1, _ref2, _results;
+      if (fontSize == null) {
+        fontSize = 20;
+      }
+      if (lineHeight == null) {
+        lineHeight = 20;
+      }
+      if (style == null) {
+        style = {
+          border: '#000',
+          background: '#FFF'
+        };
+      }
+      if (this.parent !== null) {
+        ctx.strokeStyle = style.border;
+        ctx.fillStyle = style.background;
+        ctx.strokeRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
+        ctx.fillRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
+        ctx.fillStyle = (_ref = style.color) != null ? _ref : '#000';
+        ctx.font = "" + fontSize + "px " + ((_ref1 = style.font) != null ? _ref1 : 'Arial');
+        ctx.fillText(this.value, this.rectX, this.rectY + fontSize);
+      }
+      _ref2 = this.children;
+      _results = [];
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        child = _ref2[_i];
+        _results.push(child.drawText(ctx, fontSize, lineHeight, style));
       }
       return _results;
     };
 
-    Tree.prototype.draw = function(ctx, fontSize, lineHeight, coords) {
+    Tree.prototype.drawTree = function(ctx, fontSize, lineHeight, coords) {
       if (fontSize == null) {
         fontSize = 20;
       }
@@ -144,11 +190,36 @@
       return this.drawText(ctx, fontSize, lineHeight);
     };
 
+    Tree.prototype.drawBox = function(ctx, fontSize, lineHeight, coords) {
+      if (fontSize == null) {
+        fontSize = 20;
+      }
+      if (lineHeight == null) {
+        lineHeight = 20;
+      }
+      if (coords == null) {
+        coords = {
+          x: 20,
+          y: 20
+        };
+      }
+      this.computeDimensions(ctx, fontSize, lineHeight);
+      this.drawBoxPath(ctx, fontSize, lineHeight, coords);
+      return this.drawText(ctx, fontSize, lineHeight, {
+        border: 'transparent',
+        background: 'transparent'
+      });
+    };
+
+    Tree.prototype.draw = function() {
+      return this.drawTree.apply(this, arguments);
+    };
+
     return Tree;
 
   })();
 
-  exports.parse = parse = function(string) {
+  exports.parseTabdown = function(string) {
     var indent, line, lines, tree, _i, _len;
     lines = string.split('\n');
     tree = new Tree(null, 'root', -1);
@@ -170,6 +241,64 @@
       tree = tree.parent;
     }
     return tree;
+  };
+
+  exports.parseLisp = function(string) {
+    var char, editingHead, tree, _i, _len, _ref, _ref1, _ref2;
+    tree = new Tree(null, 'root', 0);
+    editingHead = false;
+    for (_i = 0, _len = string.length; _i < _len; _i++) {
+      char = string[_i];
+      switch (char) {
+        case '(':
+          editingHead = true;
+          tree = new Tree(tree, '', tree.depth + 1);
+          break;
+        case ')':
+          while (tree.value.length === 0) {
+            (_ref = tree.parent.children).splice.apply(_ref, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
+            tree = tree.parent;
+          }
+          tree = tree.parent;
+          break;
+        case ' ':
+        case '\n':
+          if (!editingHead) {
+            if (tree.value.length === 0) {
+              (_ref1 = tree.parent.children).splice.apply(_ref1, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
+            }
+            tree = tree.parent;
+          }
+          editingHead = false;
+          tree = new Tree(tree, '', tree.depth + 1);
+          break;
+        default:
+          tree.value += char;
+      }
+    }
+    while (tree.parent !== null) {
+      if (tree.value.length === 0) {
+        (_ref2 = tree.parent.children).splice.apply(_ref2, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
+      }
+      tree = tree.parent;
+    }
+    return tree;
+  };
+
+  parseCoffee = function(node) {
+    var root;
+    root = new Tree(null, node.constructor.name);
+    node.eachChild(function(child) {
+      var newNode;
+      newNode = parseCoffee(child);
+      newNode.parent = root;
+      return root.children.push(newNode);
+    });
+    return root;
+  };
+
+  exports.parseCoffee = function(text) {
+    return parseCoffee(CoffeeScript.nodes(text));
   };
 
   window.tabdown = exports;

@@ -1,61 +1,124 @@
 <html>
-<script src="drawtree.js"></script>
 <style>
 body {
   overflow: hidden;
 }
 #canvas {
-  position: absolute; bottom: 0px; right: 0px; left: 0px;
-  height: 50%; width: 100%;
+  position: absolute; bottom: 0px; right: 0px; top: 0px;
+  height: 100%; width: 100%;
   border: 1px solid #000;
 }
 #input {
-  position: absolute; top: 0px; left: 0px; right: 0px;
-  height: 50%; width: 100%;
+  position: absolute; bottom: 0px; top: 0px; left: 0px;
+  height: 100%; width: 50%; display: none;
+  z-index: 253;
+}
+#edit {
+  width: 50px; height: 30px;
+  position: absolute; top: 0; left: 0;
+  z-index: 254; cursor: pointer;
+}
+#type {
+  position: absolute; top: 0px; right: 0px;
+  z-index: 255; height: 30px; width: 100px; cursor: pointer;
+}
+#parser {
+  position: absolute; top: 0px; right: 110px;
+  z-index: 255; height: 30px; width: 100px; cursor: pointer;
 }
 </style>
+<script src="coffee-script.js"></script>
+<script src="drawtree.js"></script>
 <script>
 window.onload = function() {
+  var canvas, ctx, type, input, editButton, editing, parser, examples;
+
+  examples = {
+    "coffee": "exports.Duck = class Duck extends Animal\n  constructor: (@age, @size) ->\n  \n  isDead: -> @age < 50\n  \n  makeSound: ->\n    if @isDead()\n      return 'oops i\\'m dead'\n    else\n      return 'QUACK'",
+    "tabdown": "I need to\n eat\n  breakfast\n   eggs\n   bacon\n   ham\n  lunch\n   soup\n   sandwich\n  dinner\n   steak\n   salad\n sleep\n  start: 11:00\n  end: 7:00\n\nI want to\n Browse the web\n  reddit\n  facebook\n Read a book\n  Harry Potter\n  Divergent",
+    "lisp": "((lambda (factorial-helper)\n  (lambda (n)\n     (factorial-helper n 1))))\n  (lambda (n w)\n    (if (= n 0) w\n        (factorial-helper (- n 1) (* n w)))))"
+  };
+
   canvas = document.getElementById('canvas');
   canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
   ctx = document.getElementById('canvas').getContext('2d');
-  input.addEventListener('input', function() {
+
+  type = document.getElementById('type');
+  parser = document.getElementById('parser');
+
+  input = document.getElementById('input');
+  input.addEventListener('input', redraw = function() {
+    var tree;
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    switch (parser.value) {
+      case 'coffee':
+        tree = tabdown.parseCoffee(input.value);
+        break;
+      case 'tabdown':
+        tree = tabdown.parseTabdown(input.value);
+        break;
+      case 'lisp':
+        tree = tabdown.parseLisp(input.value);
+        break;
+    }
 
-    tree = tabdown.parse(input.value);
-    tree.draw(ctx);
+    switch (type.value) {
+      case 'graph':
+        tree.drawTree(ctx);
+        break;
+      default:
+        tree.drawBox(ctx);
+        break;
+     }
   });
+  type.addEventListener('change', redraw);
+  parser.addEventListener('change', function() {
+    input.value = examples[parser.value];
+    redraw();
+  });
+  
+  input.value = examples['coffee'];
+  console.log(input.value);
+  tabdown.parseCoffee(input.value).drawTree(ctx);
 
-  tabdown.parse(input.value).draw(ctx);
+  editButton = document.getElementById('edit');
+  editing = false;
+  editButton.addEventListener('click', function() {
+    if (editing) {
+      editing = false;
+      input.style.display = 'none';
+      canvas.style.width = '100%';
+      canvas.width = canvas.clientWidth;
+      editButton.style.left = '0';
+      editButton.innerText = 'Edit';
+    }
+    else {
+      editing = true;
+      input.style.display = 'block';
+      canvas.style.width = '50%';
+      canvas.width = canvas.clientWidth;
+      editButton.style.left = '50%';
+      editButton.innerText = 'Done';
+    }
+    redraw();
+  });
 };
 </script>
 <body>
-<textarea id="input">
-I need to
-  eat
-    cereal
-      whole grain
-      unsweetened
-    milk
-      2%
-      homogenized
-      pasteurized
-  do homework
-      math
-      latin
-      chemistry
-        lab
-        hand-in
-  sleep
+<select id="type">
+  <option value="graph">Graph</option>
+  <option value="box">Box</option>
+</select>
 
-I want to
-  browse the web
-    reddit
-    facebook
-  read a book
-    Divergent
-    Harry Potter
-      Deathly Hallows
+<select id="parser">
+  <option value="coffee">CoffeeScript</option>
+  <option value="tabdown">Tabdown</option>
+  <option value="lisp">Lisp</option>
+</select>
+<button id="edit">Edit</button>
+<textarea id="input">
 </textarea>
 <canvas id="canvas"></canvas>
 </body>
