@@ -17,7 +17,7 @@ exports.Tree = class Tree
   
   # Rendering capabilities
   computeDimensions: (ctx, fontSize = 20, lineHeight = 20) ->
-    ctx.font = "#{fontSize}px Courier New"
+    ctx.font = "#{fontSize}px Arial"
     width = 0
     topHeight = fontSize + lineHeight
     bottomHeight = 0
@@ -27,7 +27,12 @@ exports.Tree = class Tree
       bottomHeight = Math.max child.dimensions.height, bottomHeight
       width += child.dimensions.width
 
-    width = Math.max width, ctx.measureText(@value).width + PADDING
+    if width > (ref = ctx.measureText(@value).width + PADDING)
+      @centerChildren = false
+    else
+      @centerChildren = true
+      @childrenWidth = width
+      width = ref
 
     @dimensions = {
       width: width
@@ -42,6 +47,9 @@ exports.Tree = class Tree
     
     top = coords.y + fontSize + lineHeight
     runningLeft = coords.x
+
+    if @centerChildren
+      runningLeft += (@dimensions.width - @childrenWidth) / 2
 
     for child in @children
       child.drawTreePath ctx, fontSize, lineHeight, {
@@ -66,7 +74,7 @@ exports.Tree = class Tree
       ctx.fillRect @rectX, @rectY, ctx.measureText(@value).width, fontSize
       ctx.fillStyle = '#000'
       
-      ctx.font = "#{fontSize}px Courier New"
+      ctx.font = "#{fontSize}px Arial"
       ctx.fillText @value, @rectX, @rectY + fontSize
 
     for child in @children then child.drawText ctx, fontSize, lineHeight

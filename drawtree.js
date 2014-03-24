@@ -28,14 +28,14 @@
     }
 
     Tree.prototype.computeDimensions = function(ctx, fontSize, lineHeight) {
-      var bottomHeight, child, topHeight, width, _i, _len, _ref;
+      var bottomHeight, child, ref, topHeight, width, _i, _len, _ref;
       if (fontSize == null) {
         fontSize = 20;
       }
       if (lineHeight == null) {
         lineHeight = 20;
       }
-      ctx.font = "" + fontSize + "px Courier New";
+      ctx.font = "" + fontSize + "px Arial";
       width = 0;
       topHeight = fontSize + lineHeight;
       bottomHeight = 0;
@@ -46,7 +46,13 @@
         bottomHeight = Math.max(child.dimensions.height, bottomHeight);
         width += child.dimensions.width;
       }
-      width = Math.max(width, ctx.measureText(this.value).width + PADDING);
+      if (width > (ref = ctx.measureText(this.value).width + PADDING)) {
+        this.centerChildren = false;
+      } else {
+        this.centerChildren = true;
+        this.childrenWidth = width;
+        width = ref;
+      }
       return this.dimensions = {
         width: width,
         height: topHeight + bottomHeight
@@ -72,6 +78,9 @@
       this.rectY = coords.y - fontSize / 2;
       top = coords.y + fontSize + lineHeight;
       runningLeft = coords.x;
+      if (this.centerChildren) {
+        runningLeft += (this.dimensions.width - this.childrenWidth) / 2;
+      }
       _ref = this.children;
       _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -105,7 +114,7 @@
         ctx.strokeRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
         ctx.fillRect(this.rectX, this.rectY, ctx.measureText(this.value).width, fontSize);
         ctx.fillStyle = '#000';
-        ctx.font = "" + fontSize + "px Courier New";
+        ctx.font = "" + fontSize + "px Arial";
         ctx.fillText(this.value, this.rectX, this.rectY + fontSize);
       }
       _ref = this.children;
