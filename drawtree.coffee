@@ -1,3 +1,10 @@
+###
+# drawtree.coffee
+# Quick-and-dirty tree visualization
+#
+# Copyright (c) 2013 Anthony Bau
+# MIT License.
+###
 PADDING = 10
 
 exports = {}
