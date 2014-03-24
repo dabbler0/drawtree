@@ -25,10 +25,37 @@ window.onload = function() {
     tree = tabdown.parse(input.value);
     tree.draw(ctx);
   });
+
+  tabdown.parse(input.value).draw(ctx);
 };
 </script>
 <body>
 <textarea id="input">
+I need to
+  eat
+    cereal
+      whole grain
+      unsweetened
+    milk
+      2%
+      homogenized
+      pasteurized
+  do homework
+      math
+      latin
+      chemistry
+        lab
+        hand-in
+  sleep
+
+I want to
+  browse the web
+    reddit
+    facebook
+  read a book
+    Divergent
+    Harry Potter
+      Deathly Hallows
 </textarea>
 <canvas id="canvas"></canvas>
 </body>
