@@ -1,0 +1,35 @@
+<html>
+<script src="drawtree.js"></script>
+<style>
+body {
+  overflow: hidden;
+}
+#canvas {
+  position: absolute; bottom: 0px; right: 0px; left: 0px;
+  height: 50%; width: 100%;
+  border: 1px solid #000;
+}
+#input {
+  position: absolute; top: 0px; left: 0px; right: 0px;
+  height: 50%; width: 100%;
+}
+</style>
+<script>
+window.onload = function() {
+  canvas = document.getElementById('canvas');
+  canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+  ctx = document.getElementById('canvas').getContext('2d');
+  input.addEventListener('input', function() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    tree = tabdown.parse(input.value);
+    tree.draw(ctx);
+  });
+};
+</script>
+<body>
+<textarea id="input">
+</textarea>
+<canvas id="canvas"></canvas>
+</body>
+</html>
