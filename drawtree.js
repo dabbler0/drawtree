@@ -9,7 +9,7 @@
 
 
 (function() {
-  var PADDING, Tree, exports, parseCoffee;
+  var PADDING, Tree, exports, parseCoffee, parseTags;
 
   PADDING = 10;
 
@@ -316,6 +316,63 @@
 
   exports.parseCoffee = function(text) {
     return parseCoffee(CoffeeScript.nodes(text));
+  };
+
+  exports.parseTags = parseTags = function(text) {
+    var c, char, child, depth, i, index, k, ok, r, string, trueRoot, _i, _j, _k, _len, _len1, _len2;
+    r = new Tree(null, null, null);
+    c = [text.indexOf(' '), text.indexOf('\n'), text.indexOf('[')];
+    ok = false;
+    for (_i = 0, _len = c.length; _i < _len; _i++) {
+      k = c[_i];
+      ok || (ok = k >= 0);
+    }
+    if (!ok) {
+      return new Tree(r, text, 0);
+    } else {
+      for (i = _j = 0, _len1 = c.length; _j < _len1; i = ++_j) {
+        k = c[i];
+        if (k < 0) {
+          c[i] = Infinity;
+        }
+      }
+      index = Math.min.apply(this, c);
+    }
+    trueRoot = new Tree(r, text.slice(0, index), 0);
+    text = text.slice(index);
+    string = '';
+    depth = 0;
+    for (_k = 0, _len2 = text.length; _k < _len2; _k++) {
+      char = text[_k];
+      if (char === '[') {
+        if (depth !== 0) {
+          string += char;
+        }
+        depth += 1;
+      } else if (char === ']') {
+        depth -= 1;
+        if (depth === 0) {
+          child = parseTags(string);
+          child.parent = trueRoot;
+          trueRoot.children.push(child);
+          string = '';
+        } else {
+          string += char;
+        }
+      } else if ((char === ' ' || char === '\n') && depth === 0) {
+        if (string.length !== 0) {
+          new Tree(trueRoot, string, 0);
+          string = '';
+        }
+        continue;
+      } else {
+        string += char;
+      }
+    }
+    if (string.length !== 0) {
+      new Tree(trueRoot, string, 0);
+    }
+    return trueRoot;
   };
 
   window.tabdown = exports;

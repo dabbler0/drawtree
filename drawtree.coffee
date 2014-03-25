@@ -188,4 +188,50 @@ parseCoffee = (node) ->
 exports.parseCoffee = (text) ->
   parseCoffee CoffeeScript.nodes text
 
+exports.parseTags = parseTags = (text) ->
+  r = new Tree null, null, null
+  c = [
+    text.indexOf ' '
+    text.indexOf '\n'
+    text.indexOf '['
+  ]
+  ok = false
+  ok or= (k >= 0) for k in c
+  if not ok
+    return new Tree r, text, 0
+  else
+    for k, i in c
+      if k < 0 then c[i] = Infinity
+    index = Math.min.apply this, c
+  
+  trueRoot = new Tree r, text[...index], 0
+  text = text[index...]
+  string = ''
+  depth = 0
+
+  for char in text
+    if char is '['
+      unless depth is 0 then string += char
+      depth += 1
+    else if char is ']'
+      depth -= 1
+      if depth is 0
+        child = parseTags string
+        child.parent = trueRoot
+        trueRoot.children.push child
+        string = ''
+      else string += char
+
+    else if char in [' ', '\n'] and depth is 0
+      unless string.length is 0
+        new Tree trueRoot, string, 0
+        string = ''
+      continue
+    else
+      string += char
+
+  unless string.length is 0 then new Tree trueRoot, string, 0
+
+  return trueRoot
+
 window.tabdown = exports

@@ -36,6 +36,7 @@ window.onload = function() {
   examples = {
     "coffee": "exports.Duck = class Duck extends Animal\n  constructor: (@age, @size) ->\n  \n  isDead: -> @age < 50\n  \n  makeSound: ->\n    if @isDead()\n      return 'oops i\\'m dead'\n    else\n      return 'QUACK'",
     "tabdown": "I need to\n eat\n  breakfast\n   eggs\n   bacon\n   ham\n  lunch\n   soup\n   sandwich\n  dinner\n   steak\n   salad\n sleep\n  start: 11:00\n  end: 7:00\n\nI want to\n Browse the web\n  reddit\n  facebook\n Read a book\n  Harry Potter\n  Divergent",
+    "tags": "sentence\n  [subject [pronoun I]]\n  [verb-phrase\n    [verb ASKED]\n    [object [noun-phrase [article THE] [adjective SOLEMN] [noun BARTENDER]]]\n    [objective-infinitive [verb-phrase \n      [infinitive TO MAKE] [object [noun ME]]\n      [object-infinitive [infinitive FORGET]]]]\n    [prepositional-phrase [preposition WITH] [object [article A] [noun DRINK]]]\n  ]",
     "lisp": "((lambda (factorial-helper)\n  (lambda (n)\n     (factorial-helper n 1)))\n  (lambda (n w)\n    (if (= n 0) w\n        (factorial-helper (- n 1) (* n w)))))"
   };
 
@@ -58,6 +59,9 @@ window.onload = function() {
         break;
       case 'tabdown':
         tree = tabdown.parseTabdown(input.value);
+        break;
+      case 'tags':
+        tree = tabdown.parseTags(input.value);
         break;
       case 'lisp':
         tree = tabdown.parseLisp(input.value);
@@ -115,6 +119,7 @@ window.onload = function() {
 <select id="parser">
   <option value="coffee">CoffeeScript</option>
   <option value="tabdown">Tabdown</option>
+  <option value="tags">Tags</option>
   <option value="lisp">Lisp</option>
 </select>
 <button id="edit">Edit</button>
