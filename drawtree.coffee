@@ -10,7 +10,7 @@ PADDING = 10
 exports = {}
 
 exports.Tree = class Tree
-  constructor: (@parent, @value, @depth) ->
+  constructor: (@parent, @value, @depth, @extra) ->
     if @parent? then @parent.children.push this
     @children = []
     @dimensions = null
@@ -141,31 +141,37 @@ exports.parseTabdown = (string) ->
   return tree
 
 exports.parseLisp = (string) ->
-  tree = new Tree null, 'root', 0
-  editingHead = false
+  tokens = []
+  str = ''
   for char in string
     switch char
       when '('
-        editingHead = true
-        tree = new Tree tree, '', tree.depth + 1
+        if str.length > 0 then tokens.push str; str = ''
+        tokens.push '('
       when ')'
-        while tree.value.length is 0
-          tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
-          tree = tree.parent
-        tree = tree.parent
+        if str.length > 0 then tokens.push str; str = ''
+        tokens.push ')'
       when ' ', '\n'
-        unless editingHead
-          if tree.value.length is 0
-            tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
-          tree = tree.parent
-        editingHead = false
-        tree = new Tree tree, '', tree.depth + 1
+        if str.length > 0 then tokens.push str; str = ''
       else
-        tree.value += char
+        str += char
 
+  if str.length > 0 then tokens.push str; str = ''
+  
+  tree = new Tree null, 'root', 0
+  depth = 0
+  engage = false
+  for token in tokens
+    console.log token
+    switch token
+      when '('
+        tree = new Tree tree, '  ', tree.depth + 1
+      when ')'
+        tree = tree.parent
+      else
+        new Tree tree, token, tree.depth + 1
+  
   until tree.parent is null
-    if tree.value.length is 0
-      tree.parent.children.splice tree.parent.children.indexOf(tree), 1, tree.children...
     tree = tree.parent
 
   return tree

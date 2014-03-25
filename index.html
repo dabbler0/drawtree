@@ -36,7 +36,7 @@ window.onload = function() {
   examples = {
     "coffee": "exports.Duck = class Duck extends Animal\n  constructor: (@age, @size) ->\n  \n  isDead: -> @age < 50\n  \n  makeSound: ->\n    if @isDead()\n      return 'oops i\\'m dead'\n    else\n      return 'QUACK'",
     "tabdown": "I need to\n eat\n  breakfast\n   eggs\n   bacon\n   ham\n  lunch\n   soup\n   sandwich\n  dinner\n   steak\n   salad\n sleep\n  start: 11:00\n  end: 7:00\n\nI want to\n Browse the web\n  reddit\n  facebook\n Read a book\n  Harry Potter\n  Divergent",
-    "lisp": "((lambda (factorial-helper)\n  (lambda (n)\n     (factorial-helper n 1))))\n  (lambda (n w)\n    (if (= n 0) w\n        (factorial-helper (- n 1) (* n w)))))"
+    "lisp": "((lambda (factorial-helper)\n  (lambda (n)\n     (factorial-helper n 1)))\n  (lambda (n w)\n    (if (= n 0) w\n        (factorial-helper (- n 1) (* n w)))))"
   };
 
   canvas = document.getElementById('canvas');

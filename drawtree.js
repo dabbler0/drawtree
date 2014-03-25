@@ -9,18 +9,18 @@
 
 
 (function() {
-  var PADDING, Tree, exports, parseCoffee,
-    __slice = [].slice;
+  var PADDING, Tree, exports, parseCoffee;
 
   PADDING = 10;
 
   exports = {};
 
   exports.Tree = Tree = (function() {
-    function Tree(parent, value, depth) {
+    function Tree(parent, value, depth, extra) {
       this.parent = parent;
       this.value = value;
       this.depth = depth;
+      this.extra = extra;
       if (this.parent != null) {
         this.parent.children.push(this);
       }
@@ -244,42 +244,59 @@
   };
 
   exports.parseLisp = function(string) {
-    var char, editingHead, tree, _i, _len, _ref, _ref1, _ref2;
-    tree = new Tree(null, 'root', 0);
-    editingHead = false;
+    var char, depth, engage, str, token, tokens, tree, _i, _j, _len, _len1;
+    tokens = [];
+    str = '';
     for (_i = 0, _len = string.length; _i < _len; _i++) {
       char = string[_i];
       switch (char) {
         case '(':
-          editingHead = true;
-          tree = new Tree(tree, '', tree.depth + 1);
+          if (str.length > 0) {
+            tokens.push(str);
+            str = '';
+          }
+          tokens.push('(');
           break;
         case ')':
-          while (tree.value.length === 0) {
-            (_ref = tree.parent.children).splice.apply(_ref, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
-            tree = tree.parent;
+          if (str.length > 0) {
+            tokens.push(str);
+            str = '';
           }
-          tree = tree.parent;
+          tokens.push(')');
           break;
         case ' ':
         case '\n':
-          if (!editingHead) {
-            if (tree.value.length === 0) {
-              (_ref1 = tree.parent.children).splice.apply(_ref1, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
-            }
-            tree = tree.parent;
+          if (str.length > 0) {
+            tokens.push(str);
+            str = '';
           }
-          editingHead = false;
-          tree = new Tree(tree, '', tree.depth + 1);
           break;
         default:
-          tree.value += char;
+          str += char;
+      }
+    }
+    if (str.length > 0) {
+      tokens.push(str);
+      str = '';
+    }
+    tree = new Tree(null, 'root', 0);
+    depth = 0;
+    engage = false;
+    for (_j = 0, _len1 = tokens.length; _j < _len1; _j++) {
+      token = tokens[_j];
+      console.log(token);
+      switch (token) {
+        case '(':
+          tree = new Tree(tree, '  ', tree.depth + 1);
+          break;
+        case ')':
+          tree = tree.parent;
+          break;
+        default:
+          new Tree(tree, token, tree.depth + 1);
       }
     }
     while (tree.parent !== null) {
-      if (tree.value.length === 0) {
-        (_ref2 = tree.parent.children).splice.apply(_ref2, [tree.parent.children.indexOf(tree), 1].concat(__slice.call(tree.children)));
-      }
       tree = tree.parent;
     }
     return tree;
